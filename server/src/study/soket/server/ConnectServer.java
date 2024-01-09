@@ -4,8 +4,11 @@ import study.socket.common.ConnectionService;
 import study.socket.common.InputResult;
 import study.socket.common.Message;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class ConnectServer implements Runnable{
@@ -34,6 +37,16 @@ public class ConnectServer implements Runnable{
                     forSent.setMessage(new Message(result.getMessage().getText()));
                 } else if (result.getFile() != null) {
                     // TODO:: реализовать сохранение файла
+                    String path = String.valueOf(result.getFile());
+                    String[] parts = path.split(" ");
+                    path = parts[1];
+                    File file = new File(path);
+                    byte[] array = null;
+                    if (file.exists()) {
+                         {
+                            array = Files.readAllBytes(Paths.get(path));
+                        }
+                    }
                     forSent.setMessage(new Message("Загружен новый файл " +
                             result.getFile().getFile().getName() + " " + result.getFile().getLen()));
                 }

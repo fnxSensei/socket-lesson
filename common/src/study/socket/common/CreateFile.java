@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class CreateFile implements Serializable {
-    private String path;
+
     private File file;
     private String name;
     private int len = 100;
@@ -14,16 +14,17 @@ public class CreateFile implements Serializable {
     byte[] array;
 
 
-    public CreateFile(String path) throws IOException {
-        String[] parts = path.split(" ");
-        this.path = parts[1];
-        file = new File(this.path);
-        if (file.exists()) {
-            if (file.getUsableSpace() < size && file.getName().length() < len) {
-                array = Files.readAllBytes(Paths.get(path));
-            }
+    public CreateFile(File file, String name, int len, int size, byte [] array) {
+        if (file.getName().length() < len && file.getName().endsWith(".txt") && file.getUsableSpace() < size) {
+            this.name = name;
+            this.file = file;
+            this.array = array;
+        } else {
+            System.out.println("Файл не соответствует параметрам");
         }
     }
+
+
 
         public byte[] getArray () {
             return array;

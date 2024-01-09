@@ -79,6 +79,18 @@ public class Client implements Runnable {
                     }
                     if (result.getFile() != null){
                         // TODO:: реализовать сохранение файла
+                        String path = String.valueOf(result.getFile());
+                        String[] parts = path.split(" ");
+                        path = parts[1];
+                        File file = new File(path);
+                        byte[] array = null;
+                        if (file.exists()) {
+                                try {
+                                    array = Files.readAllBytes(Paths.get(path));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
                         System.out.println("Получение файла");
                     } else {
                         System.out.println(result.getMessage().getText());
