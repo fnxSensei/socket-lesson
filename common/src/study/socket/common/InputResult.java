@@ -1,11 +1,10 @@
 package study.socket.common;
 
-public class InputResult {
+import java.io.Serializable;
+
+public class InputResult implements Serializable {
     private Message message;
     private CreateFile file;
-
-    public InputResult() {
-    }
 
     public Message getMessage() {
         return message;

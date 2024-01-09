@@ -11,7 +11,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class ConnectServer implements Runnable{
     private ConnectionService service;
     private Server server;
-    private CopyOnWriteArraySet<ConnectionService> copyOnWriteArraySet = new CopyOnWriteArraySet<>();
+    // соединения, которые создаются и наполняются в классе Server
+    private CopyOnWriteArraySet<ConnectionService> copyOnWriteArraySet;
 
 
 
@@ -19,35 +20,38 @@ public class ConnectServer implements Runnable{
     {
         this.service = service;
         this.server = server;
-    }
-
-    public ConnectServer(ConnectionService connectionService) {
+        this.copyOnWriteArraySet = server.getCopyOnWriteArraySet();
     }
 
     @Override
     public void run() {
         while (true) {
-            copyOnWriteArraySet.add(service);
             try {
                 InputResult result = service.readInputResult();
+                InputResult forSent = new InputResult();
                 if (result.getMessage() != null) {
                     System.out.println(result.getMessage().getText());
-                    result.setMessage(new Message("from server"));
-                    service.writeInputResult(result);
+                    forSent.setMessage(new Message(result.getMessage().getText()));
                 } else if (result.getFile() != null) {
-                    result.setMessage(new Message("Загружен новый файл " +
+                    // TODO:: реализовать сохранение файла
+                    forSent.setMessage(new Message("Загружен новый файл " +
                             result.getFile().getFile().getName() + " " + result.getFile().getLen()));
-                    for (ConnectionService con : copyOnWriteArraySet) {
-                        if (con != service) {
-                            con.writeInputResult(result);
+                }
+                for (ConnectionService con : copyOnWriteArraySet) {
+                    if (con != service) {
+                        try {
+                            con.writeInputResult(forSent);
+                        } catch (IOException e){
+                            // удаление любого отключившегося клиента
+                            copyOnWriteArraySet.remove(con);
                         }
                     }
                 }
             } catch (IOException e) {
+                // удаление текущего клиента, если он отключился
+                copyOnWriteArraySet.remove(service);
                 System.out.println(e.getMessage());
                 System.out.println("Ошибка подключение клиента");
-            }finally {
-                copyOnWriteArraySet.remove(service);
             }
 
         }

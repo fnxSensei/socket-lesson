@@ -1,6 +1,7 @@
 package study.soket.server;
 
 import study.socket.common.ConnectionService;
+import study.socket.common.CreateFile;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -11,7 +12,10 @@ import java.util.concurrent.Executors;
 
 public class Server implements Runnable {
     private int port;
-    private CopyOnWriteArraySet<ConnectionService> copyOnWriteArraySet;
+    // для активных клиентов
+    private CopyOnWriteArraySet<ConnectionService> copyOnWriteArraySet = new CopyOnWriteArraySet<>();
+    // информация о файлах хранится на сервере
+    private CopyOnWriteArraySet <CreateFile> listOfFile = new CopyOnWriteArraySet<>();
 
     public Server(int port) {
         this.port = port;
@@ -25,12 +29,17 @@ public class Server implements Runnable {
             while (true){
                 Socket socket=serverSocket.accept();
                 ConnectionService service = new ConnectionService(socket);
-                //copyOnWriteArraySet.add(service);
+                // добавляем в список, чтобы потом делать рассылку
+                copyOnWriteArraySet.add(service);
                 executorService.execute(new ConnectServer(service, this));
             }
         }catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public CopyOnWriteArraySet<ConnectionService> getCopyOnWriteArraySet() {
+        return copyOnWriteArraySet;
     }
 }
 

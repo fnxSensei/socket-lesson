@@ -24,8 +24,6 @@ import java.util.Scanner;
 
 public class Client implements Runnable {
     private InetSocketAddress remoteAddress;
-    private InputResult result = new InputResult();
-
 
     public Client(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
@@ -41,14 +39,12 @@ public class Client implements Runnable {
 
             Thread thread1 = new Thread(() -> {
                 while (true) {
-
-                    result.setMessage(null);
-                    result.setFile(null);
                     System.out.println("Введите текст путь к файлу или /exit");
+                    // каждое новое сообщение - новый экземпляр
+                    InputResult result = new InputResult();
                     String text = scanner.nextLine();
                     if (text.equals("/exit")) break;
                     if (text.endsWith(".txt")) {
-
                         System.out.println("Введите колличество символов для описания файла");
                         int len = scanner.nextInt();
                         System.out.println("Введите размер файла в Mb");
@@ -60,27 +56,33 @@ public class Client implements Runnable {
                             System.out.println("файл не прочитать");
                         }
                         result.setFile(new CreateFile(new File(text), text, len, size, array));
-
                     } else {
                         result.setMessage(new Message(text));
+                    }
+                    try {
+                        // поток, который занимается отправкой
+                        service.writeInputResult(result);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 }
             });
 
             Thread thread2 = new Thread(() -> {
                 while (true) {
+                    InputResult result = null;
                     try {
-                        service.writeInputResult(result);
+                        // поток, который занимается чтением
+                        result = service.readInputResult();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    InputResult result1 = null;
-                    try {
-                        result1 = service.readInputResult();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    if (result.getFile() != null){
+                        // TODO:: реализовать сохранение файла
+                        System.out.println("Получение файла");
+                    } else {
+                        System.out.println(result.getMessage().getText());
                     }
-                    System.out.println(result1.getMessage().getText());
                 }
 
             });
